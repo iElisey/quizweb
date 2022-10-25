@@ -22,8 +22,12 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class QuizRestController {
 
+    private final QuizService quizService;
+
     @Autowired
-    private QuizService quizService;
+    public QuizRestController(QuizService quizService) {
+        this.quizService = quizService;
+    }
 
     @PostMapping("/quizzes")
     public ResponseEntity<?> createNewQuiz(@Valid @RequestBody Quiz quiz, BindingResult errors, @AuthenticationPrincipal User user) {

@@ -1,8 +1,6 @@
 package com.elos.webquizengine.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 
 import javax.persistence.*;
@@ -10,6 +8,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -19,7 +18,6 @@ import java.util.ArrayList;
 @AllArgsConstructor
 @Getter
 @Setter
-@ToString
 public class Quiz {
 
 
@@ -35,7 +33,6 @@ public class Quiz {
 
     @ManyToOne
     @JoinColumn(name = "author_id")
-    @JsonIgnore
     private User author;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")

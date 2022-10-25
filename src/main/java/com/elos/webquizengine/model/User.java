@@ -1,102 +1,48 @@
 package com.elos.webquizengine.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.Hibernate;
 
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-@Setter
-@ToString
+
 @Entity
 @Table(name = "users")
-public class User implements UserDetails {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class User implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(nullable = false)
-    private Long id;
-
-    @JsonIgnore
-    @Column(nullable = false)
-    private String username;
-
-
-    @JsonIgnore
-    @Column(nullable = false)
-    private String password;
-
-    @JsonIgnore
-    private boolean accountNonExpired;
-
-    @JsonIgnore
-    private boolean accountNonLocked;
-
-    @JsonIgnore
-    private boolean credentialsNonExpired;
-
-    @JsonIgnore
-    private boolean enabled;
-
-    @Enumerated(EnumType.STRING)
-    @ElementCollection(fetch = FetchType.EAGER)
-    @JsonIgnore
-    private List<Role> roles;
+    private String id;
+    private String name;
+    private String userpic;
+    private String email;
+    private String gender;
+    private String locale;
+    private LocalDateTime lastVisit;
+    private Role role;
 
     @Override
-    public String getUsername() {
-        return username;
-    }
-
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        User user = (User) o;
+        return id != null && Objects.equals(id, user.id);
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
+    public int hashCode() {
+        return getClass().hashCode();
     }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-
-    public void grantAuthority(Role authority) {
-        if (roles == null) roles = new ArrayList<>();
-        roles.add(authority);
-    }
-
-    @Override
-    @JsonIgnore
-    public List<GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        roles.forEach(role -> authorities.add(new SimpleGrantedAuthority(role.toString())));
-        return authorities;
-    }
-
 }
 

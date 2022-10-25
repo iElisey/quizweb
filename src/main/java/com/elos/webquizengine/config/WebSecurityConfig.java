@@ -1,56 +1,65 @@
 package com.elos.webquizengine.config;
 
+import com.elos.webquizengine.model.Role;
+import com.elos.webquizengine.model.User;
+import com.elos.webquizengine.repo.UserRepository;
+import org.springframework.boot.autoconfigure.security.oauth2.client.EnableOAuth2Sso;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.PrincipalExtractor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDateTime;
 
 @Configuration
 @EnableWebSecurity
+@EnableOAuth2Sso
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    public WebSecurityConfig(@Lazy UserDetailsService userDetailsService, @Lazy PasswordEncoder passwordEncoder) {
-        this.userDetailsService = userDetailsService;
-        this.passwordEncoder = passwordEncoder;
-    }
-
-    @Bean
-    public RestAuthenticationEntryPoint restAuthenticationEntryPoint() {
-        return new RestAuthenticationEntryPoint();
-    }
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(13);
-    }
-
-    private final UserDetailsService userDetailsService;
-
-    private final PasswordEncoder passwordEncoder;
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .headers().frameOptions().disable().and()
+        http
+                .antMatcher("/**")
                 .authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/api/register/**").permitAll()
-                .antMatchers("/api/quizzes/**").permitAll()
-                .and().httpBasic()
-                .authenticationEntryPoint(restAuthenticationEntryPoint());
-
+                .antMatchers("/", "/get/**", "api/quizzes/**", "/api/quizzes","/login**", "/js/**", "/error**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/quizzes/**").authenticated()
+                .antMatchers(HttpMethod.DELETE, "/api/quizzes/**").authenticated()
+                .anyRequest().authenticated()
+                .and().logout().logoutSuccessUrl("/").permitAll()
+                .and()
+                .csrf().disable();
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder);
-        provider.setUserDetailsService(userDetailsService);
-        return provider;
+    public PrincipalExtractor principalExtractor(UserRepository userRepository) {
+        return map -> {
+            String id = (String) map.get("sub");
+            User user = userRepository.findById(id).orElseGet(()->{
+                User newUser = new User();
+                newUser.setId(id);
+                newUser.setName((String) map.get("name"));
+                newUser.setEmail((String) map.get("email"));
+
+                if (newUser.getEmail().equals("yelisei.osadchyi@gmail.com")) {
+                    newUser.setRole(Role.ADMIN);
+                } else {
+                    newUser.setRole(Role.USER);
+                }
+
+                newUser.setGender((String) map.get("gender"));
+                newUser.setLocale((String) map.get("locale"));
+                newUser.setUserpic((String) map.get("picture"));
+
+                return newUser;
+
+
+            });
+
+            user.setLastVisit(LocalDateTime.now());
+            return userRepository.save(user);
+        };
     }
+
 }

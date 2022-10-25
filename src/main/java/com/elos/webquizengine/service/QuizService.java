@@ -20,13 +20,16 @@ import java.util.*;
 @Service
 public class QuizService {
 
+    private final QuizRepository quizRepository;
+    private final CompleteRepository completeRepository;
+
     @Autowired
-    private QuizRepository quizRepository;
-    @Autowired
-    private CompleteRepository completeRepository;
+    public QuizService(QuizRepository quizRepository, CompleteRepository completeRepository) {
+        this.quizRepository = quizRepository;
+        this.completeRepository = completeRepository;
+    }
 
     public Quiz add(Quiz quiz) {
-
         if (quiz.getAnswer() == null) quiz.setAnswer(new ArrayList<>());
         quiz.setDate(LocalDateTime.now());
         return quizRepository.save(quiz);
